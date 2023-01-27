@@ -1,7 +1,6 @@
 ---
 title: "Import Data - ACF - PACF"
 author: "Luana Lima"
-date: "1/19/2022"
 output: pdf_document
 editor_options: 
   chunk_output_type: console
@@ -179,7 +178,17 @@ Note that ts_inflow_data has information on start, end and frequency. We will di
 ```{r}
 acf(ts_inflow_data[,1])
 pacf(ts_inflow_data[,1])
-#x:time series
+#x-axies:time series
 #blue dotted lines: significant levels
+#acf will only run for time series objects
+acf(ts_inflow_data[,1],lag.max=50)
+pacf(ts_inflow_data[,1],lag.max=50)
+#
+
+library(forecast)
+acf(ts_inflow_data[,1],lag.max=50)
+pacf(ts_inflow_data[,1],lag.max=50)
+#
+
 ```
 
