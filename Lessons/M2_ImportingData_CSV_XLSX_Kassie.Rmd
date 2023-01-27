@@ -3,7 +3,7 @@ title: "More on Importing Data Sets"
 author: "Luana Lima"
 output: pdf_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Setting R code chunk options
@@ -12,7 +12,7 @@ First R code chunk is used for setting the options for all R code chunks. The ch
 
 ```{r setup, include=FALSE} 
 knitr::opts_chunk$set(echo = TRUE,tidy.opts=list(width.cutoff=60), tidy=TRUE) 
-#teh tidy arguments prevent the code from running off the page i.e. wrap by itself
+#the tidy arguments prevent the code from running off the page i.e. wrap by itself
 
 ```
 
@@ -60,6 +60,7 @@ colnames(energy_data2) <- read_col_names
 head(energy_data2)
 
 ts_energy <- ts(energy_data2[2:14])
+#KH: energy_data2[2:14] is the same as [,2:14]
 
 ```
 

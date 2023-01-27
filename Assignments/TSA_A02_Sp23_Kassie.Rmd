@@ -34,6 +34,11 @@ Consider the data provided in the spreadsheet "Table_10.1_Renewable_Energy_Produ
 
 ```{r}
 #Importing data set
+library(readxl)
+energy_data <- read_excel(path='../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1,skip=12,col_names=FALSE)
+colnames(energy_data) <- read_excel(path='../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1, skip=10, n_max=1, col_names=FALSE)
+
+head(energy_data)
 
 ```
 
@@ -42,7 +47,8 @@ Consider the data provided in the spreadsheet "Table_10.1_Renewable_Energy_Produ
 You will work only with the following columns: Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption. Create a data frame structure with these three time series only. Use the command head() to verify your data.
 
 ```{r}
-
+energy_data2 <- as.data.frame(energy_data[4:6])
+head(energy_data2)
 ```
 
 
@@ -50,7 +56,10 @@ You will work only with the following columns: Total Biomass Energy Production, 
 Transform your data frame in a time series object and specify the starting point and frequency of the time series using the function ts().
 
 ```{r}
+ts_energy_data2 <- ts(energy_data2,start = c(1973,1),end=c(2022,9), frequency = 12)
 
+tail(ts_energy_data2,10)
+#just to check the incomplete 2022 data are correctly imported 
 ```
 
 
