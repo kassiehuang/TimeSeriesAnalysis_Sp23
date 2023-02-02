@@ -2,6 +2,8 @@
 title: "M3: Class Exercise on Trend and Season - after class Jan 31"
 author: "Luana Lima"
 output: pdf_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Setting R code chunk options
@@ -94,7 +96,7 @@ Note our last observation is from August 2011 but the data file was filled with 
 
 ```{r}
 #Remove last year by replacing current data frame
-inflow_data <- inflow_data[1:(nobs-412,]
+inflow_data <- inflow_data[1:(nobs-12),]
 
 #update object with number of observations
 nobs <- nobs-12
@@ -109,7 +111,10 @@ Fixed!
 Many of the functions we will use require a time series object. You can transform your data in a time series using the function *ts()*. 
 
 ```{r}
-
+ts_inflow_data <- ts(inflow_data[,2:(2+nhydro-1)],frequency=12,start=c(1931,1))
+#Kassie: （2+nhydro-1）意味着，从2开始，往后数nhydro列，“-1”用于调整计数（2+15=17，实际上一共只有16列）
+#start=c(1931,1,1): 第一个数据从1931.1.1开始；c(1931,3):第一个数据从1931.3开始
+head(ts_inflow_data)
 ```
 
 
@@ -118,7 +123,29 @@ Many of the functions we will use require a time series object. You can transfor
 Let's use functions Acf() and Pacf() from package "forecast".
 
 ```{r acf}
+for(i in 1:nhydro){
+  par(mfrow=c(1,2))
+  Acf(ts_inflow_data[,i],lag.max=40,main=paste("HP",i))
+  Pacf(ts_inflow_data[,i],lag.max=40,main=paste("HP",i))
+}
 
+#Alternative: directly extracting the column names to be the title of the plot
+name <- colnames(ts_inflow_data)
+for(i in 1:nhydro){
+  par(mfrow=c(1,2))
+  Acf(ts_inflow_data[,i],lag.max=40,main=name[i])
+  Pacf(ts_inflow_data[,i],lag.max=40,main=paste("HP",i))
+}
+
+#Alternative 2: set a fixed y-axis range
+name <- colnames(ts_inflow_data)
+for(i in 1:nhydro){
+  par(mfrow=c(1,2))
+  Acf(ts_inflow_data[,i],lag.max=40,main=name[i],ylim=c(-1,1))
+  Pacf(ts_inflow_data[,i],lag.max=40,main=paste("HP",i))
+}
+
+#comment: the choice of lag.max=40 is for demonstration
 
 
 ```
@@ -130,12 +157,16 @@ Let's identify and remove trend component like we leaned on the recorded videos 
 
 ```{r}
 #Create vector t
-
-
+t <- 1:nobs 
+iHP=4
 
 #Fit a linear trend to TS of iHP
+linear_trend <- lm(ts_inflow_data[,iHP] ~ t)
+summary(linear_trend)
 
-
+ggplot(inflow_data,aes(x=my_date,y=ts_inflow_data[,iHP]))+
+  geom_line(color='blue')+
+  geom_smooth(method='lm',color='red')
 ```
 
 
