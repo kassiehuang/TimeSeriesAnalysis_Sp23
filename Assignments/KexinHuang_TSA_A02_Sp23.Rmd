@@ -52,6 +52,7 @@ You will work only with the following columns: Total Biomass Energy Production, 
 
 ```{r}
 energy_data2 <- as.data.frame(energy_data[,4:6])
+datanames <- colnames(energy_data2)
 head(energy_data2)
 ```
 
@@ -71,14 +72,20 @@ tail(ts_energy_data2,10)
 Compute mean and standard deviation for these three series.
 
 ```{r}
+#create empty vectors to store means and SDs
 means <- c()
 SDs <- c()
+#indexs
 ndata <- ncol(energy_data2)
 
 for(i in 1:ndata){
   means <- c(means,mean(energy_data2[,i]))
   SDs <- c(SDs,sd(energy_data2[,i]))
 }
+
+mean_SD <- rbind(means,SDs)
+colnames(mean_SD) <- datanames
+mean_SD
 
 ```
 
@@ -92,7 +99,6 @@ Display and interpret the time series plot for each of these variables. Try to m
 
 library(ggfortify)
 library(lubridate)
-datanames <- colnames(energy_data2)
 
 for(i in 1:ndata){
   print(autoplot(ts_energy_data2[,i])+
@@ -104,6 +110,11 @@ for(i in 1:ndata){
 
 ```
 
+The time series plot of the total biomass energy production showed a non-linear increase trend. The pre-1990 data show some subtle seasonality with a more pronounced valley and several smaller waveform, while the post-1990 data become more volatile and it is difficult to observe any seasonality.
+The time series plot of the total renewable energy production showed a non-linear increase trend. There may also be some seasonal components in this data series, which may be related to the seasonality of sunlight and wind energy, but it's not clear in looking the plot.
+The time series plot of the hydroelectric power consumption didn't show a clear trend and it is dominated by strong seasonal patterns.
+
+
 ## Question 5
 
 Compute the correlation between these three series. Are they significantly correlated? Explain your answer.
@@ -113,14 +124,28 @@ Compute the correlation between these three series. Are they significantly corre
 cor_Biomass_Renew <- lm(`Total Biomass Energy Production`~`Total Renewable Energy Production`,data=energy_data2)
 summary(cor_Biomass_Renew)
 
+```
+
+The P-value is 2.2e-16, which is less than 0.001, indicating that the total renewable energy production is significantly correlated with the total biomass energy production.
+Meanwhile, the coefficient is equal to 0.44, which is greater than 0, indicating that the total renewable energy production is positively correlated with the biomass energy production.
+
+```{r}
 #Total Renewable energy production ~ Hydroelectric Power Consumption
 cor_Renew_Hydro <- lm(`Total Renewable Energy Production`~`Hydroelectric Power Consumption`,data=energy_data2)
 summary(cor_Renew_Hydro)
+```
 
+The P-value is 0.01492, which is less than 0.05, indicating that the total renewable energy production is significantly correlated with the hydroelectric power consumption.
+Meanwhile, the coefficient is equal to -0.43, which is less than 0, indicating that the total renewable energy production is positively correlated with the hydroelectric power consumption.
+
+```{r}
 #Total Biomass Energy Production ~ Hydroelectric Power Consumption
 cor_Biomass_Hydro <- lm(`Total Biomass Energy Production`~`Hydroelectric Power Consumption`,data=energy_data2)
 summary(cor_Biomass_Hydro)
 ```
+
+The P-value is 7.26e-14, which is less than 0.001, indicating that the total biomass energy production is significantly correlated with the hydroelectric power consumption.
+Meanwhile, the coefficient is equal to -0.62, which is less than 0, indicating that the total biomass energy production is positively correlated with the hydroelectric power consumption.
 
 ## Question 6
 
@@ -132,6 +157,9 @@ for(i in 1:ndata){
 }
 ```
 
+From the ACF plot of the total biomass energy production, this time series exhibits a strong auto-correlation. The ACF decays as lag increases, but even at lag=40, the value of ACF is still as high as ~0.7. Similarly, the second plot of the total renewable energy production also showed a stronger auto-correlation, although smaller than the first one.
+The hydroelectric power consumption, observed from its ACF plot, shows a different patter. It shows a clear waveform, but the value of the crest gradually decreases, which means that there is a seasonality in the data.
+
 ## Question 7
 
 Compute the partial autocorrelation function from lag 1 to lag 40 for these three variables. How these plots differ from the ones in Q6?
@@ -141,3 +169,7 @@ for(i in 1:ndata){
   Pacf(energy_data2[,i],lag.max = 40,main=datanames[i],ylim=c(-1,1))
 }
 ```
+
+Compared to Q6, all three plots show the same change: the values of Partial ACF are significantly reduced to within the significant interval, except for lag=1 which remains unchanged.
+For biomass energy and renewable energy production, which previously showed only positive values in the ACF plot, their PACFs both showed several significant negative values. These negative auto-correlations may have been previously masked by the strong positive correlation for lag=1.
+In addition, the waveform presented in the ACF plot of hydroelectric power consumption almost disappear.
