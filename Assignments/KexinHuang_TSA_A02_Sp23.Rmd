@@ -13,13 +13,13 @@ editor_options:
 
 ## Submission Instructions
 
-You should open the .rmd file corresponding to this assignment on RStudio. The file is available on our class repository on Github.   
+You should open the .rmd file corresponding to this assignment on RStudio. The file is available on our class repository on Github.
 
-Once you have the file open on your local machine the first thing you will do is rename the file such that it includes your first and last name (e.g., "LuanaLima_TSA_A02_Sp23.Rmd"). Then change "Student Name" on line 4 with your name. 
+Once you have the file open on your local machine the first thing you will do is rename the file such that it includes your first and last name (e.g., "LuanaLima_TSA_A02_Sp23.Rmd"). Then change "Student Name" on line 4 with your name.
 
-Then you will start working through the assignment by  **creating code and output** that answer each question. Be sure to use this assignment document. Your report should contain the answer to each question and any plots/tables you obtained (when applicable).
+Then you will start working through the assignment by **creating code and output** that answer each question. Be sure to use this assignment document. Your report should contain the answer to each question and any plots/tables you obtained (when applicable).
 
-When you have completed the assignment, **Knit** the text and code into a single PDF file. Submit this pdf using Sakai. 
+When you have completed the assignment, **Knit** the text and code into a single PDF file. Submit this pdf using Sakai.
 
 ## R packages
 
@@ -32,23 +32,22 @@ library(tseries)
 library(dplyr)
 ```
 
-
-## Data set information  
+## Data set information
 
 Consider the data provided in the spreadsheet "Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx" on our **Data** folder. The data comes from the US Energy Information and Administration and corresponds to the December 2022 Monthly Energy Review. The spreadsheet is ready to be used. You will also find a $.csv$ version of the data "Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source-Edit.csv". You may use the function $read.table()$ to import the $.csv$ data in R. Or refer to the file "M2_ImportingData_CSV_XLSX.Rmd" in our Lessons folder for functions that are better suited for importing the $.xlsx$.
 
 ```{r}
 #Importing data set
 library(readxl)
-energy_data <- read_excel(path='../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1,skip=12,col_names=FALSE)
-colnames(energy_data) <- read_excel(path='../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1, skip=10, n_max=1, col_names=FALSE)
+energy_data <- read_excel(path='./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1,skip=12,col_names=FALSE)
+colnames(energy_data) <- read_excel(path='./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1, skip=10, n_max=1, col_names=FALSE)
 
 head(energy_data)
 
 ```
 
-
 ## Question 1
+
 You will work only with the following columns: Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption. Create a data frame structure with these three time series only. Use the command head() to verify your data.
 
 ```{r}
@@ -56,19 +55,19 @@ energy_data2 <- as.data.frame(energy_data[,4:6])
 head(energy_data2)
 ```
 
-
 ## Question 2
+
 Transform your data frame in a time series object and specify the starting point and frequency of the time series using the function ts().
 
 ```{r}
 ts_energy_data2 <- ts(energy_data2,start = c(1973,1), frequency = 12)
 
+#check the incomplete 2022 data are correctly imported 
 tail(ts_energy_data2,10)
-#just to check the incomplete 2022 data are correctly imported 
 ```
 
-
 ## Question 3
+
 Compute mean and standard deviation for these three series.
 
 ```{r}
@@ -83,8 +82,8 @@ for(i in 1:ndata){
 
 ```
 
-
 ## Question 4
+
 Display and interpret the time series plot for each of these variables. Try to make your plot as informative as possible by writing titles, labels, etc. For each plot add a horizontal line at the mean of each series in a different color.
 
 ```{r}
@@ -105,8 +104,8 @@ for(i in 1:ndata){
 
 ```
 
-
 ## Question 5
+
 Compute the correlation between these three series. Are they significantly correlated? Explain your answer.
 
 ```{r}
@@ -123,8 +122,8 @@ cor_Biomass_Hydro <- lm(`Total Biomass Energy Production`~`Hydroelectric Power C
 summary(cor_Biomass_Hydro)
 ```
 
-
 ## Question 6
+
 Compute the autocorrelation function from lag 1 up to lag 40 for these three variables. What can you say about these plots? Do the three of them have the same behavior?
 
 ```{r}
@@ -133,8 +132,8 @@ for(i in 1:ndata){
 }
 ```
 
-
 ## Question 7
+
 Compute the partial autocorrelation function from lag 1 to lag 40 for these three variables. How these plots differ from the ones in Q6?
 
 ```{r}
@@ -142,5 +141,3 @@ for(i in 1:ndata){
   Pacf(energy_data2[,i],lag.max = 40,main=datanames[i],ylim=c(-1,1))
 }
 ```
-
-
