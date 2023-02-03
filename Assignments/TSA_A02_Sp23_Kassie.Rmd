@@ -4,6 +4,8 @@ subtitle: "Assignment 2 - Due date 02/03/23"
 author: "Kassie Huang"
 output: pdf_document
 geometry: margin=2.54cm
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Submission Instructions
@@ -35,8 +37,8 @@ Consider the data provided in the spreadsheet "Table_10.1_Renewable_Energy_Produ
 ```{r}
 #Importing data set
 library(readxl)
-energy_data <- read_excel(path='../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1,skip=12,col_names=FALSE)
-colnames(energy_data) <- read_excel(path='../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1, skip=10, n_max=1, col_names=FALSE)
+energy_data <- read_excel(path='./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1,skip=12,col_names=FALSE)
+colnames(energy_data) <- read_excel(path='./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1, skip=10, n_max=1, col_names=FALSE)
 
 head(energy_data)
 
@@ -47,7 +49,7 @@ head(energy_data)
 You will work only with the following columns: Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption. Create a data frame structure with these three time series only. Use the command head() to verify your data.
 
 ```{r}
-energy_data2 <- as.data.frame(energy_data[4:6])
+energy_data2 <- as.data.frame(energy_data[,4:6])
 head(energy_data2)
 ```
 
@@ -56,7 +58,7 @@ head(energy_data2)
 Transform your data frame in a time series object and specify the starting point and frequency of the time series using the function ts().
 
 ```{r}
-ts_energy_data2 <- ts(energy_data2,start = c(1973,1),end=c(2022,9), frequency = 12)
+ts_energy_data2 <- ts(energy_data2,start = c(1973,1), frequency = 12)
 
 tail(ts_energy_data2,10)
 #just to check the incomplete 2022 data are correctly imported 
@@ -67,6 +69,14 @@ tail(ts_energy_data2,10)
 Compute mean and standard deviation for these three series.
 
 ```{r}
+means <- c()
+SDs <- c()
+ndata <- ncol(energy_data2)
+
+for(i in 1:ndata){
+  means <- c(means,mean(energy_data2[,i]))
+  SDs <- c(SDs,sd(energy_data2[,i]))
+}
 
 ```
 
@@ -75,6 +85,18 @@ Compute mean and standard deviation for these three series.
 Display and interpret the time series plot for each of these variables. Try to make your plot as informative as possible by writing titles, labels, etc. For each plot add a horizontal line at the mean of each series in a different color.
 
 ```{r}
+#installed ggfortify previously in console following: http://www.sthda.com/english/wiki/ggfortify-extension-to-ggplot2-to-handle-some-popular-packages-r-software-and-data-visualization#installation
+
+library(ggfortify)
+datanames <- colnames(energy_data2)
+
+for(i in 1:ndata){
+  print(autoplot(ts_energy_data2[,i])+
+          geom_hline(yintercept = means[i],linetype="dashed",color='blue')+
+          labs(title = paste('Time Series of',datanames[i],sep=' '),
+               y='Trillion Btu')+
+        annotate("text", x=2020 ,y = max(ts_energy_data2[,i]), label = paste("SD =",round(SDs[i],2),sep=' ')))
+} 
 
 ```
 
@@ -83,7 +105,17 @@ Display and interpret the time series plot for each of these variables. Try to m
 Compute the correlation between these three series. Are they significantly correlated? Explain your answer.
 
 ```{r}
+#Total Biomass Energy Production ~ Renewable Energy Production
+cor_Biomass_Renew <- lm(`Total Biomass Energy Production`~`Total Renewable Energy Production`,data=energy_data2)
+summary(cor_Biomass_Renew)
 
+#Total Renewable energy production ~ Hydroelectric Power Consumption
+cor_Renew_Hydro <- lm(`Total Renewable Energy Production`~`Hydroelectric Power Consumption`,data=energy_data2)
+summary(cor_Renew_Hydro)
+
+#Total Biomass Energy Production ~ Hydroelectric Power Consumption
+cor_Biomass_Hydro <- lm(`Total Biomass Energy Production`~`Hydroelectric Power Consumption`,data=energy_data2)
+summary(cor_Biomass_Hydro)
 ```
 
 
@@ -91,7 +123,9 @@ Compute the correlation between these three series. Are they significantly corre
 Compute the autocorrelation function from lag 1 up to lag 40 for these three variables. What can you say about these plots? Do the three of them have the same behavior?
 
 ```{r}
-
+for(i in 1:ndata){
+  Acf(energy_data2[,i],lag.max = 40,main=datanames[i],ylim=c(-1,1))
+}
 ```
 
 
@@ -99,7 +133,9 @@ Compute the autocorrelation function from lag 1 up to lag 40 for these three var
 Compute the partial autocorrelation function from lag 1 to lag 40 for these three variables. How these plots differ from the ones in Q6?
 
 ```{r}
-
+for(i in 1:ndata){
+  Pacf(energy_data2[,i],lag.max = 40,main=datanames[i],ylim=c(-1,1))
+}
 ```
 
 
