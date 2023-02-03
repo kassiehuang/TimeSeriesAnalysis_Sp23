@@ -1,10 +1,13 @@
 ---
 title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2023"
-subtitle: "Assignment 2 - Due date 02/03/23"
 author: "Kassie Huang"
-output: pdf_document
+subtitle: "Assignment 2 - Due date 02/03/23"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 geometry: margin=2.54cm
-editor_options: 
+editor_options:
   chunk_output_type: console
 ---
 
@@ -37,8 +40,8 @@ Consider the data provided in the spreadsheet "Table_10.1_Renewable_Energy_Produ
 ```{r}
 #Importing data set
 library(readxl)
-energy_data <- read_excel(path='./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1,skip=12,col_names=FALSE)
-colnames(energy_data) <- read_excel(path='./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1, skip=10, n_max=1, col_names=FALSE)
+energy_data <- read_excel(path='../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1,skip=12,col_names=FALSE)
+colnames(energy_data) <- read_excel(path='../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1, skip=10, n_max=1, col_names=FALSE)
 
 head(energy_data)
 
@@ -85,9 +88,11 @@ for(i in 1:ndata){
 Display and interpret the time series plot for each of these variables. Try to make your plot as informative as possible by writing titles, labels, etc. For each plot add a horizontal line at the mean of each series in a different color.
 
 ```{r}
-#installed ggfortify previously in console following: http://www.sthda.com/english/wiki/ggfortify-extension-to-ggplot2-to-handle-some-popular-packages-r-software-and-data-visualization#installation
+#installed ggfortify previously in console following
+#http://www.sthda.com/english/wiki/ggfortify-extension-to-ggplot2-to-handle-some-popular-packages-r-software-and-data-visualization#installation
 
 library(ggfortify)
+library(lubridate)
 datanames <- colnames(energy_data2)
 
 for(i in 1:ndata){
@@ -95,7 +100,7 @@ for(i in 1:ndata){
           geom_hline(yintercept = means[i],linetype="dashed",color='blue')+
           labs(title = paste('Time Series of',datanames[i],sep=' '),
                y='Trillion Btu')+
-        annotate("text", x=2020 ,y = max(ts_energy_data2[,i]), label = paste("SD =",round(SDs[i],2),sep=' ')))
+        annotate("text", x=as_date(2020) ,y = max(ts_energy_data2[,i]), label = paste("SD =",round(SDs[i],2),sep=' ')))
 } 
 
 ```
