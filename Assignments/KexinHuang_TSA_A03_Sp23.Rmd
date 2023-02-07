@@ -1,7 +1,7 @@
 ---
 title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2023"
 subtitle: "Assignment 3 - Due date 02/10/23"
-author: "Student Name"
+author: "Kexin(Kassie) Huang"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
@@ -32,13 +32,53 @@ R packages needed for this assignment:"forecast","tseries", and "Kendall". Insta
 
 ```{r}
 #Load/install required package here
-
+library(forecast)
+library(tseries)
+library(Kendall)
 ```
 
 ##Trend Component
 
 ### Q1
 Create a plot window that has one row and three columns. And then for each object on your data frame, fill the plot window with time series plot, ACF and PACF. You may use the some code form A2, but I want all three plots on the same window this time. (Hint: use par() function)
+```{r}
+#import data
+library(readxl)
+energy_data <- read_excel(path='./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1,skip=12,col_names=FALSE)
+colnames(energy_data) <- read_excel(path='./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1, skip=10, n_max=1, col_names=FALSE)
+energy_data2 <- as.data.frame(energy_data[,4:6])
+ts_energy_data2 <- ts(energy_data2,start = c(1973,1), frequency = 12)
+
+#index
+datanames <- colnames(energy_data2)
+ndata <- ncol(energy_data2)
+
+#install packages
+library(ggplot2)
+library(ggfortify)
+library(patchwork)
+
+#Time series plot
+plots_ts <- list()
+for(i in 1:ndata){
+  p <-  autoplot(ts_energy_data2[,i])+
+          labs(title = paste('Time Series of',datanames[i],sep=' '),
+               y='Trillion Btu')
+  plots_ts[[i]] <- p
+}
+wrap_plots(plots_ts, ncol = 3)
+
+#ACF&PACF
+for(i in 1:ndata){
+  par(mfrow=c(1,3))
+  Acf(ts_energy_data2,lag.max=40,main=datanames[i],ylim=c(-1,1))
+}
+for(i in 1:ndata){
+  Pacf(ts_energy_data2,lag.max=40,main=datanames[i],ylim=c(-1,1))
+}
+
+```
+
 
 ### Q2
 From the plot in Q1, do the series Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption appear to have a trend? If yes, what kind of trend?
