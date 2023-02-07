@@ -69,13 +69,12 @@ for(i in 1:ndata){
 wrap_plots(plots_ts, ncol = 3)
 
 #ACF&PACF
+par(mfrow=c(1,3))
 for(i in 1:ndata){
-  par(mfrow=c(1,3))
-  Acf(ts_energy_data2,lag.max=40,main=datanames[i],ylim=c(-1,1))
+  print(datanames[i])
+  Acf(ts_energy_data2[,i],lag.max=40,main=datanames[i],ylim=c(-1,1))
 }
-for(i in 1:ndata){
-  Pacf(ts_energy_data2,lag.max=40,main=datanames[i],ylim=c(-1,1))
-}
+#还需要改一下margins
 
 ```
 
