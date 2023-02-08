@@ -51,39 +51,46 @@ ts_energy_data2 <- ts(energy_data2,start = c(1973,1), frequency = 12)
 
 #index
 datanames <- colnames(energy_data2)
-ndata <- ncol(energy_data2)
+ncols <- ncol(energy_data2)
 
-#install packages
+#Time series plot
 library(ggplot2)
 library(ggfortify)
 library(patchwork)
 
-#Time series plot
 plots_ts <- list()
-for(i in 1:ndata){
+for(i in 1:ncols){
   p <-  autoplot(ts_energy_data2[,i])+
-          labs(title = paste('Time Series of',datanames[i],sep=' '),
-               y='Trillion Btu')
+    labs(title = datanames[i],y='Trillion Btu')+
+    theme(text = element_text(size = 6))
   plots_ts[[i]] <- p
 }
 wrap_plots(plots_ts, ncol = 3)
 
 #ACF&PACF
 par(mfrow=c(1,3))
-for(i in 1:ndata){
-  print(datanames[i])
-  Acf(ts_energy_data2[,i],lag.max=40,main=datanames[i],ylim=c(-1,1))
+for(i in 1:ncols){
+  Acf(ts_energy_data2[,i],lag.max=40,main=datanames[i],cex.main=0.5,ylim=c(-1,1),ylab='Acf')
 }
-#还需要改一下margins
-
+for(i in 1:ncols){
+  Pacf(ts_energy_data2[,i],lag.max=40,main=datanames[i],cex.main=0.5,ylim=c(-1,1),ylab='Pacf')
+}
 ```
 
 
 ### Q2
 From the plot in Q1, do the series Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption appear to have a trend? If yes, what kind of trend?
 
+Answer:
+Yes, all of them have a trend. Both the total biomass energy production and the total renewable energy production have a upward trend, and the hydroelectric power consumption has a slight downward trend.
+
+*what do you mean by "what kind of trend"? deterministic vs stochastic?*
+
 ### Q3
 Use the *lm()* function to fit a linear trend to the three time series. Ask R to print the summary of the regression. Interpret the regression output, i.e., slope and intercept. Save the regression coefficients for further analysis.
+```{r}
+
+```
  
 ### Q4
 Use the regression coefficients from Q3 to detrend the series. Plot the detrended series and compare with the plots from Q1. What happened? Did anything change?
