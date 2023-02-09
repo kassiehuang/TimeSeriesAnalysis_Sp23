@@ -46,12 +46,12 @@ Create a plot window that has one row and three columns. And then for each objec
 library(readxl)
 energy_data <- read_excel(path='./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1,skip=12,col_names=FALSE)
 colnames(energy_data) <- read_excel(path='./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx',sheet=1, skip=10, n_max=1, col_names=FALSE)
-energy_data2 <- as.data.frame(energy_data[,4:6])
-ts_energy_data2 <- ts(energy_data2,start = c(1973,1), frequency = 12)
+energy_data <- as.data.frame(energy_data[,4:6])
+ts_energy_data <- ts(energy_data,start = c(1973,1), frequency = 12)
 
 #index
-datanames <- colnames(energy_data2)
-ncols <- ncol(energy_data2)
+datanames <- colnames(energy_data)
+ncols <- ncol(energy_data)
 
 #Time series plot
 library(ggplot2)
@@ -60,7 +60,7 @@ library(patchwork)
 
 plots_ts <- list()
 for(i in 1:ncols){
-  p <-  autoplot(ts_energy_data2[,i])+
+  p <-  autoplot(ts_energy_data[,i])+
     labs(title = datanames[i],y='Trillion Btu')+
     theme(text = element_text(size = 6))
   plots_ts[[i]] <- p
@@ -70,10 +70,10 @@ wrap_plots(plots_ts, ncol = 3)
 #ACF&PACF
 par(mfrow=c(1,3))
 for(i in 1:ncols){
-  Acf(ts_energy_data2[,i],lag.max=40,main=datanames[i],cex.main=0.5,ylim=c(-1,1),ylab='Acf')
+  Acf(ts_energy_data[,i],lag.max=40,main=datanames[i],cex.main=0.5,ylim=c(-1,1),ylab='Acf')
 }
 for(i in 1:ncols){
-  Pacf(ts_energy_data2[,i],lag.max=40,main=datanames[i],cex.main=0.5,ylim=c(-1,1),ylab='Pacf')
+  Pacf(ts_energy_data[,i],lag.max=40,main=datanames[i],cex.main=0.5,ylim=c(-1,1),ylab='Pacf')
 }
 ```
 
@@ -82,7 +82,7 @@ for(i in 1:ncols){
 From the plot in Q1, do the series Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption appear to have a trend? If yes, what kind of trend?
 
 Answer:
-Yes, all of them have a trend. Both the total biomass energy production and the total renewable energy production have a upward trend, and the hydroelectric power consumption has a slight downward trend.
+Yes, all of them have a trend. Both the total biomass energy production and the total renewable energy production have an increase trend, and the hydroelectric power consumption has a slight decrease trend.
 
 *what do you mean by "what kind of trend"? deterministic vs stochastic?*
 
@@ -90,13 +90,55 @@ Yes, all of them have a trend. Both the total biomass energy production and the 
 Use the *lm()* function to fit a linear trend to the three time series. Ask R to print the summary of the regression. Interpret the regression output, i.e., slope and intercept. Save the regression coefficients for further analysis.
 ```{r}
 
+t <- 1:nrow(energy_data)
+
+
+#Biomass Energy Production
+linear_trend_biomass <- lm(energy_data$`Total Biomass Energy Production`~t)
+summary(linear_trend_biomass)
+beta0_biomass <- linear_trend_biomass$coefficients[1]
+beta1_biomass <- linear_trend_biomass$coefficients[2]
+
+#Renewable Energy Production
+linear_trend_renewable <- lm(energy_data$`Total Renewable Energy Production`~t)
+summary(linear_trend_renewable)
+beta0_renewable <- linear_trend_renewable$coefficients[1]
+beta1_renewable <- linear_trend_renewable$coefficients[2]
+
+#Hydroelectric Power Consumption
+linear_trend_hydro <- lm(energy_data$`Hydroelectric Power Consumption`~t)
+summary(linear_trend_hydro)
+beta0_hydro <- linear_trend_hydro$coefficients[1]
+beta1_hydro <- linear_trend_hydro$coefficients[2]
+
 ```
  
 ### Q4
 Use the regression coefficients from Q3 to detrend the series. Plot the detrended series and compare with the plots from Q1. What happened? Did anything change?
+```{r}
+#create an empty list to store plots
+plots2_ts <- list()
+
+#plot the de-trended series and compare with the original one
+detrend_biomass <- energy_data[,1]-(beta0_biomass + beta1_biomass*t)
+ts_detrend_biomass <- ts(detrend_biomass,start = c(1973.1),frequency=12)
+p <- autoplot(ts_detrend_biomass)+
+  labs(title=datanames[1],y='Trillion btu')+
+  theme(text=element_text(size=6))
+plots2_ts[[1]] <- p
+plots2_ts[[1]] + plots_ts[1]
+
+
+```
 
 ### Q5
 Plot ACF and PACF for the detrended series and compare with the plots from Q1. Did the plots change? How?
+```{r}
+par(mfrow=c(1,2))
+Acf(ts_detrend_biomass,lag.max = 40,ylim=c(-1,1),cex.main=0.6)
+Pacf(ts_detrend_biomass,lag.max = 40,ylim=c(-1,1),cex.main=0.6)
+
+```
 
 ## Seasonal Component
 
