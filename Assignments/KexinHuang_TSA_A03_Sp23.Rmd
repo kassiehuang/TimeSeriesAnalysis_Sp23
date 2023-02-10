@@ -41,6 +41,9 @@ library(Kendall)
 
 ### Q1
 Create a plot window that has one row and three columns. And then for each object on your data frame, fill the plot window with time series plot, ACF and PACF. You may use the some code form A2, but I want all three plots on the same window this time. (Hint: use par() function)
+
+Answer:
+
 ```{r}
 #import data
 library(readxl)
@@ -82,15 +85,18 @@ for(i in 1:ncols){
 From the plot in Q1, do the series Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption appear to have a trend? If yes, what kind of trend?
 
 Answer:
-Yes, all of them have a trend. Both the total biomass energy production and the total renewable energy production have an increase trend, and the hydroelectric power consumption has a slight decrease trend.
 
-*what do you mean by "what kind of trend"? deterministic vs stochastic?*
+Yes, all of them have a trend. Both the total biomass energy production and the total renewable energy production have an increasing trend, and the hydroelectric power consumption has a slightly decreasing trend.
+
 
 ### Q3
 Use the *lm()* function to fit a linear trend to the three time series. Ask R to print the summary of the regression. Interpret the regression output, i.e., slope and intercept. Save the regression coefficients for further analysis.
+
+Answer:
 ```{r}
 
-t <- 1:nrow(energy_data)
+nobs <- nrow(energy_data)
+t <- 1:nobs
 
 
 #Biomass Energy Production
@@ -113,8 +119,18 @@ beta1_hydro <- linear_trend_hydro$coefficients[2]
 
 ```
  
+Interpretation:
+For biomass energy production, the coefficient of t is 0.48 with the p-value less than 0.001, and the intercept is 133.7. In other words, the biomass energy production is positively correlated with time, and the linear trend model can be written as:
+Biomass energy production = 134 + 0.48*t
+
+Similarly, the p-value of the remaining two models are both less than 0.001, which indicates significant correlation. The linear trend models can be written as:
+Renewable energy production = 312 + 0.936*t
+Hydroelectric power consumption = 260 - 0.0829*t 
+
 ### Q4
 Use the regression coefficients from Q3 to detrend the series. Plot the detrended series and compare with the plots from Q1. What happened? Did anything change?
+
+Answer:
 ```{r}
 #create an empty list to store plots
 plots2_ts <- list()
@@ -123,20 +139,44 @@ plots2_ts <- list()
 detrend_biomass <- energy_data[,1]-(beta0_biomass + beta1_biomass*t)
 ts_detrend_biomass <- ts(detrend_biomass,start = c(1973.1),frequency=12)
 p <- autoplot(ts_detrend_biomass)+
-  labs(title=datanames[1],y='Trillion btu')+
+  labs(title=paste(datanames[1],"(detrended)"),y='Trillion btu')+
   theme(text=element_text(size=6))
 plots2_ts[[1]] <- p
-plots2_ts[[1]] + plots_ts[1]
+plots_ts[[1]] + plots2_ts[1] #showing side-by-side
 
+detrend_renewable <- energy_data[,2]-(beta0_renewable + beta1_renewable*t)
+ts_detrend_renewable <- ts(detrend_renewable,start = c(1973.1),frequency=12)
+p <- autoplot(ts_detrend_renewable)+
+  labs(title=paste(datanames[2],"(detrended)"),y='Trillion btu')+
+  theme(text=element_text(size=6))
+plots2_ts[[2]] <- p
+plots_ts[[2]] + plots2_ts[2] #showing side-by-side
+
+detrend_hydro <- energy_data[,3]-(beta0_hydro + beta1_hydro*t)
+ts_detrend_hydro <- ts(detrend_hydro,start = c(1973.1),frequency=12)
+p <- autoplot(ts_detrend_hydro)+
+  labs(title=paste(datanames[3],"(detrended)"),y='Trillion btu')+
+  theme(text=element_text(size=6))
+plots2_ts[[3]] <- p
+plots_ts[[3]] + plots2_ts[3] #showing side-by-side
 
 ```
+
+All of the plot changed after being detrended.
+Firstly, the values of y-axis all decreased a lot. 
+Also, in terms of the shape of detrended lines, the first half of biomass's line seems to be "lifted up" a bit, making the overall trend more horizontal. Same for renewable energy production. Hydro power consumption changed in the opposite, but the overall trend also get more horizontal.
 
 ### Q5
 Plot ACF and PACF for the detrended series and compare with the plots from Q1. Did the plots change? How?
 ```{r}
-par(mfrow=c(1,2))
-Acf(ts_detrend_biomass,lag.max = 40,ylim=c(-1,1),cex.main=0.6)
-Pacf(ts_detrend_biomass,lag.max = 40,ylim=c(-1,1),cex.main=0.6)
+
+for(i in 1:ncols){
+  par(mfrow=c(1,2))
+  Acf(ts_energy_data[,i],lag.max=40,main=datanames[i],cex.main=0.3,ylim=c(-1,1))
+  Acf(ts_detrend_biomass,lag.max = 40, main=paste(datanames[i],"(detrended)"),ylim=c(-1,1),cex.main=0.3, )
+  Pacf(ts_energy_data[,i],lag.max=40,main=datanames[i],cex.main=0.3,ylim=c(-1,1))
+  Pacf(ts_detrend_biomass,lag.max = 40, main=paste(datanames[i],"(detrended)"),ylim=c(-1,1),cex.main=0.3, )
+}
 
 ```
 
@@ -146,6 +186,29 @@ Set aside the detrended series and consider the original series again from Q1 to
 
 ### Q6
 Do the series seem to have a seasonal trend? Which serie/series? Use function *lm()* to fit a seasonal means model (i.e. using the seasonal dummies) to this/these time series. Ask R to print the summary of the regression. Interpret the regression output. Save the regression coefficients for further analysis.
+
+```{r}
+dummies <- seasonaldummy(ts_energy_data[,1])
+
+#Biomass energy production
+seas_mean_model_biomass <- lm(ts_energy_data[,1]~dummies)
+summary(seas_mean_model_biomass)
+beta_int_biomass=seas_means_model$coefficients[1]
+beta_coeff_biomass=seas_means_model$coefficients[2:12]
+
+biomass_seas_comp=array(0,nobs)
+for(i in 1:nobs){
+  inflow_seas_comp[i]=(beta_int+beta_coeff%*%dummies[i,])
+}
+#Renewable energy production
+seas_mean_model_renewable <- lm(ts_energy_data[,2]~dummies)
+summary(seas_mean_model_renewable)
+
+
+
+plot(decompose(ts_energy_data[,1]))
+
+```
 
 ### Q7
 Use the regression coefficients from Q6 to deseason the series. Plot the deseason series and compare with the plots from part Q1. Did anything change?
