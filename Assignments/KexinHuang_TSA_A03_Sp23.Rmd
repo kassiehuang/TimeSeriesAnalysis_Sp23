@@ -138,47 +138,68 @@ plots2_ts <- list()
 #plot the de-trended series and compare with the original one
 detrend_biomass <- energy_data[,1]-(beta0_biomass + beta1_biomass*t)
 ts_detrend_biomass <- ts(detrend_biomass,start = c(1973.1),frequency=12)
-p <- autoplot(ts_detrend_biomass)+
-  labs(title=paste(datanames[1],"(detrended)"),y='Trillion btu')+
-  theme(text=element_text(size=6))
-plots2_ts[[1]] <- p
-plots_ts[[1]] + plots2_ts[1] #showing side-by-side
+print(autoplot(ts_detrend_biomass)+
+  labs(title=paste(datanames[1],"(Black: detrended)"),y='Trillion btu')+
+  theme(text=element_text(size=6))+
+  geom_line(aes(y=ts_energy_data[,1]),color='brown')+
+  geom_hline(yintercept = 0, linetype="dashed")
+  )
 
 detrend_renewable <- energy_data[,2]-(beta0_renewable + beta1_renewable*t)
 ts_detrend_renewable <- ts(detrend_renewable,start = c(1973.1),frequency=12)
-p <- autoplot(ts_detrend_renewable)+
-  labs(title=paste(datanames[2],"(detrended)"),y='Trillion btu')+
-  theme(text=element_text(size=6))
-plots2_ts[[2]] <- p
-plots_ts[[2]] + plots2_ts[2] #showing side-by-side
+print(autoplot(ts_detrend_renewable)+
+  labs(title=paste(datanames[2],"(Black: detrended)"),y='Trillion btu')+
+  theme(text=element_text(size=6))+
+  geom_line(aes(y=ts_energy_data[,2]),color='green')+
+  geom_hline(yintercept = 0, linetype="dashed")
+)
 
 detrend_hydro <- energy_data[,3]-(beta0_hydro + beta1_hydro*t)
 ts_detrend_hydro <- ts(detrend_hydro,start = c(1973.1),frequency=12)
-p <- autoplot(ts_detrend_hydro)+
-  labs(title=paste(datanames[3],"(detrended)"),y='Trillion btu')+
-  theme(text=element_text(size=6))
-plots2_ts[[3]] <- p
-plots_ts[[3]] + plots2_ts[3] #showing side-by-side
-
+print(autoplot(ts_detrend_hydro)+
+  labs(title=paste(datanames[3],"(Black: detrended)"),y='Trillion btu')+
+  theme(text=element_text(size=6))+
+  geom_line(aes(y=ts_energy_data[,3]),color='blue')+
+  geom_hline(yintercept = 0, linetype="dashed"))
 ```
 
 All of the plot changed after being detrended.
-Firstly, the values of y-axis all decreased a lot. 
+Firstly, the values of y-axis all decreased a lot, and the detrended lines all flucuate around 0.
 Also, in terms of the shape of detrended lines, the first half of biomass's line seems to be "lifted up" a bit, making the overall trend more horizontal. Same for renewable energy production. Hydro power consumption changed in the opposite, but the overall trend also get more horizontal.
 
 ### Q5
 Plot ACF and PACF for the detrended series and compare with the plots from Q1. Did the plots change? How?
 ```{r}
 
-for(i in 1:ncols){
-  par(mfrow=c(1,2))
-  Acf(ts_energy_data[,i],lag.max=40,main=datanames[i],cex.main=0.3,ylim=c(-1,1))
-  Acf(ts_detrend_biomass,lag.max = 40, main=paste(datanames[i],"(detrended)"),ylim=c(-1,1),cex.main=0.3, )
-  Pacf(ts_energy_data[,i],lag.max=40,main=datanames[i],cex.main=0.3,ylim=c(-1,1))
-  Pacf(ts_detrend_biomass,lag.max = 40, main=paste(datanames[i],"(detrended)"),ylim=c(-1,1),cex.main=0.3, )
-}
+#Biomass energy production
+par(mfrow=c(1,2))
+Acf(ts_energy_data[,1],lag.max=40,main=datanames[1],cex.main=0.3,ylim=c(-1,1))
+Acf(ts_detrend_biomass,lag.max = 40, main=paste(datanames[1],"(detrended)"),ylim=c(-1,1),cex.main=0.3, )
+Pacf(ts_energy_data[,1],lag.max=40,main=datanames[1],cex.main=0.3,ylim=c(-1,1))
+Pacf(ts_detrend_biomass,lag.max = 40, main=paste(datanames[1],"(detrended)"),ylim=c(-1,1),cex.main=0.3)
+```
+After detrending, most of the values in the ACF plot decreased, except for the values around lag=12, 24, and 36. Likewise, in the PACF plot, only the values around lag=12, 24, and 36 increased.
+
+```{r}
+#Renewable energy production
+par(mfrow=c(1,2))
+Acf(ts_energy_data[,2],lag.max=40,main=datanames[2],cex.main=0.3,ylim=c(-1,1))
+Acf(ts_detrend_renewable,lag.max = 40, main=paste(datanames[2],"(detrended)"),ylim=c(-1,1),cex.main=0.3, )
+Pacf(ts_energy_data[,2],lag.max=40,main=datanames[2],cex.main=0.3,ylim=c(-1,1))
+Pacf(ts_detrend_renewable,lag.max = 40, main=paste(datanames[2],"(detrended)"),ylim=c(-1,1),cex.main=0.3)
+```
+Most of the values in the ACF plot have decreased after the detrending, and the wave-like shape is more pronounced. On the other hand, the values in the PACF plot increased after detrending, indicating a stronger autocorrelation.
+
+```{r}
+#Hydro energy consumption
+par(mfrow=c(1,2))
+Acf(ts_energy_data[,3],lag.max=40,main=datanames[3],cex.main=0.3,ylim=c(-1,1))
+Acf(ts_detrend_hydro,lag.max = 40, main=paste(datanames[3],"(detrended)"),ylim=c(-1,1),cex.main=0.3, )
+Pacf(ts_energy_data[,3],lag.max=40,main=datanames[3],cex.main=0.3,ylim=c(-1,1))
+Pacf(ts_detrend_hydro,lag.max = 40, main=paste(datanames[3],"(detrended)"),ylim=c(-1,1),cex.main=0.3)
 
 ```
+The ACF plot shows a stronger, clearer seasonal component after detrending, with deeper troughs and narrower waves. The PACF plot shows no clear change.
 
 ## Seasonal Component
 
@@ -191,29 +212,100 @@ Do the series seem to have a seasonal trend? Which serie/series? Use function *l
 dummies <- seasonaldummy(ts_energy_data[,1])
 
 #Biomass energy production
-seas_mean_model_biomass <- lm(ts_energy_data[,1]~dummies)
-summary(seas_mean_model_biomass)
-beta_int_biomass=seas_means_model$coefficients[1]
-beta_coeff_biomass=seas_means_model$coefficients[2:12]
+seas_means_model_biomass <- lm(ts_energy_data[,1]~dummies)
+summary(seas_means_model_biomass)
+beta_int_biomass=seas_means_model_biomass$coefficients[1]
+beta_coeff_biomass=seas_means_model_biomass$coefficients[2:12]
 
-biomass_seas_comp=array(0,nobs)
-for(i in 1:nobs){
-  inflow_seas_comp[i]=(beta_int+beta_coeff%*%dummies[i,])
-}
 #Renewable energy production
-seas_mean_model_renewable <- lm(ts_energy_data[,2]~dummies)
-summary(seas_mean_model_renewable)
+seas_means_model_renewable <- lm(ts_energy_data[,2]~dummies)
+summary(seas_means_model_renewable)
+beta_int_renewable=seas_means_model_renewable$coefficients[1]
+beta_coeff_renewable=seas_means_model_renewable$coefficients[2:12]
 
-
-
-plot(decompose(ts_energy_data[,1]))
+#hydroelectric power consumption
+seas_means_model_hydro <- lm(ts_energy_data[,3]~dummies)
+summary(seas_means_model_hydro)
+beta_int_hydro=seas_means_model_hydro$coefficients[1]
+beta_coeff_hydro=seas_means_model_hydro$coefficients[2:12]
 
 ```
+According to the regression output, the p-values in the first two seasonal means models are all greater than 0.05. This indicates that the seasonal means model does not fit the seasonal components well.
+On the other hand, the seasonal means model works well for the time series of hydroelectric power consumption. Most of the p-values are less than 0.05. The intercept shows the seasonal mean for the month of December, while the other coefficients show the relative change to the seasonal mean of December.
 
 ### Q7
 Use the regression coefficients from Q6 to deseason the series. Plot the deseason series and compare with the plots from part Q1. Did anything change?
 
+Answer:
+```{r}
+#plot biomass energy production with its seasonal component
+biomass_seas_comp=array(0,nobs)
+for(i in 1:nobs){
+  biomass_seas_comp[i]=(beta_int_biomass+beta_coeff_biomass%*%dummies[i,])
+}
+deseason_biomass <- energy_data[,1] - biomass_seas_comp
+ts_deseason_biomass <- ts(deseason_biomass)
+print(
+  autoplot(ts_deseason_biomass)+
+    labs(y='Trillion btu', title = datanames[1])+
+    geom_line(aes(y=ts_energy_data[,1]),color='brown')
+)
+
+
+#same for renewable and hydro
+renewable_seas_comp=array(0,nobs)
+for(i in 1:nobs){
+  renewable_seas_comp[i]=(beta_int_renewable+beta_coeff_renewable%*%dummies[i,])
+}
+deseason_renewable <- energy_data[,2] - renewable_seas_comp
+ts_deseason_renewable <- ts(deseason_renewable)
+print(
+  autoplot(ts_deseason_renewable)+
+    labs(y='Trillion btu', title = datanames[2])+
+    geom_line(aes(y=ts_energy_data[,2]),color='green')
+)
+
+hydro_seas_comp=array(0,nobs)
+for(i in 1:nobs){
+  hydro_seas_comp[i]=(beta_int_hydro+beta_coeff_hydro%*%dummies[i,])
+}
+deseason_hydro <- energy_data[,3] - hydro_seas_comp
+ts_deseason_hydro <- ts(deseason_hydro)
+print(
+  autoplot(ts_deseason_hydro)+
+    labs(y='Trillion btu', title = datanames[3])+
+    geom_line(aes(y=ts_energy_data[,3]),color='blue')
+)
+
+
+```
+Yes. Not only do the values decrease after deseasoning, but the random fluctuations in each line seem to be more noticeable.
+
 ### Q8
 Plot ACF and PACF for the deseason series and compare with the plots from Q1. Did the plots change? How?
 
+```{r}
+#Biomass energy production
+par(mfrow=c(1,2))
+Acf(ts_energy_data[,1],lag.max=40,main=datanames[1],cex.main=0.3,ylim=c(-1,1))
+Acf(ts_deseason_biomass,lag.max = 40, main=paste(datanames[1],"(deseasoned)"),ylim=c(-1,1),cex.main=0.3, )
+Pacf(ts_energy_data[,1],lag.max=40,main=datanames[1],cex.main=0.3,ylim=c(-1,1))
+Pacf(ts_deseason_biomass,lag.max = 40, main=paste(datanames[1],"(deseasoned)"),ylim=c(-1,1),cex.main=0.3)
 
+#Renewable energy production
+par(mfrow=c(1,2))
+Acf(ts_energy_data[,2],lag.max=40,main=datanames[2],cex.main=0.3,ylim=c(-1,1))
+Acf(ts_deseason_renewable,lag.max = 40, main=paste(datanames[2],"(deseasoned)"),ylim=c(-1,1),cex.main=0.3, )
+Pacf(ts_energy_data[,2],lag.max=40,main=datanames[2],cex.main=0.3,ylim=c(-1,1))
+Pacf(ts_deseason_renewable,lag.max = 40, main=paste(datanames[2],"(deseasoned)"),ylim=c(-1,1),cex.main=0.3)
+
+#Hydro energy consumption
+par(mfrow=c(1,2))
+Acf(ts_energy_data[,3],lag.max=40,main=datanames[3],cex.main=0.3,ylim=c(-1,1))
+Acf(ts_deseason_hydro,lag.max = 40, main=paste(datanames[3],"(deseasoned)"),ylim=c(-1,1),cex.main=0.3, )
+Pacf(ts_energy_data[,3],lag.max=40,main=datanames[3],cex.main=0.3,ylim=c(-1,1))
+Pacf(ts_deseason_hydro,lag.max = 40, main=paste(datanames[3],"(deseasoned)"),ylim=c(-1,1),cex.main=0.3)
+
+```
+
+Yes, all plots changed. Any wave-like patterns in original ACF and PACF plots no longer exist. In addition, the PACF values decay much faster after deseasoning. There are very few values remaining above significant levels, most of which are located at lags close to 0.
