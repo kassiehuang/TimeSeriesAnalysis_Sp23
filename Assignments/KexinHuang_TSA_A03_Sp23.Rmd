@@ -204,10 +204,12 @@ The ACF plot shows a stronger, clearer seasonal component after detrending, with
 ## Seasonal Component
 
 Set aside the detrended series and consider the original series again from Q1 to answer Q6 to Q8.
+#note from class: it's just because the detrending wasn't performed very well. in reality, detrend it first, and use the detrened one!
 
 ### Q6
 Do the series seem to have a seasonal trend? Which serie/series? Use function *lm()* to fit a seasonal means model (i.e. using the seasonal dummies) to this/these time series. Ask R to print the summary of the regression. Interpret the regression output. Save the regression coefficients for further analysis.
 
+#note from class: look at the overall p-value rather than the one for each p-values: it means there is no significant difference from the intercept, not meaning the seasonal mean model doesn't work well
 ```{r}
 dummies <- seasonaldummy(ts_energy_data[,1])
 
@@ -283,6 +285,7 @@ Yes. Not only do the values decrease after deseasoning, but the random fluctuati
 
 ### Q8
 Plot ACF and PACF for the deseason series and compare with the plots from Q1. Did the plots change? How?
+#what do we ultimately want is a fast decaying ACF&PACF plot, meaning that we donnot need to take much lags into consideration
 
 ```{r}
 #Biomass energy production
