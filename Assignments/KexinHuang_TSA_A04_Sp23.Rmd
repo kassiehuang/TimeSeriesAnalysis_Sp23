@@ -1,7 +1,7 @@
 ---
 title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2023"
 subtitle: "Assignment 4 - Due date 02/17/23"
-author: "Student Name"
+author: "Kexin(Kassie) Huang"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
@@ -22,7 +22,11 @@ R packages needed for this assignment: "xlsx" or "readxl", "ggplot2", "forecast"
 
 ```{r}
 #Load/install required package here
-
+library(readxl)
+library(ggplot2)
+library(forecast)
+library(tseries)
+library(Kendall)
 
 ```
 
@@ -34,6 +38,15 @@ Consider the same data you used for A3 from the spreadsheet "Table_10.1_Renewabl
 ```{r}
 #Importing data set - using xlsx package
 
+raw_data <- read_excel("./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",skip=12,col_names = FALSE)
+colnames(raw_data) <- read_excel("./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",skip=10,n_max = 1,col_names = FALSE)
+
+#import date column
+library(lubridate)
+my_date <- ymd(raw_data$Month)
+
+#extract the total renewable energy production column
+renewable <- raw_data$`Total Renewable Energy Production`
 
 ```
 
@@ -49,9 +62,18 @@ Difference the "Total Renewable Energy Production" series using function diff().
 
 Try differencing at lag 1 only once, i.e., make `lag=1` and `differences=1`. Plot the differenced series Do the series still seem to have trend?
 
+Answer:
 ```{r}
+#create the differenced series
+diff_renewable <- diff(x = renewable,lag = 1,differences = 1)
 
+#plot the trend
+par(mfrow=c(1,2))
+plot(x=my_date,y=renewable,main='original',type='l')
+plot(x=my_date[1:length(diff_renewable)],y=diff_renewable,main='differenced',type='l')
 ```
+
+No. The differenced series doesn't seem to have trend any more.
 
 ### Q2
 
@@ -61,6 +83,18 @@ Copy and paste part of your code for A3 where you compute regression for Total E
 
 ```{r}
 
+#linear regression
+t <- 1:length(renewable)
+linear_trend_renewable <- lm(renewable~t)
+summary(linear_trend_renewable)
+beta0_renewable <- linear_trend_renewable$coefficients[1]
+beta1_renewable <- linear_trend_renewable$coefficients[2]
+detrend_renewable <- renewable-(beta0_renewable + beta1_renewable*t)
+
+#plot the series
+par(mfrow=c(1,2))
+plot(x=my_date[1:length(diff_renewable)],y=diff_renewable,main='differenced',type='l')
+plot(x=my_date,y=detrend_renewable,main='detrended',type='l')
 ```
 
 ### Q3
@@ -68,7 +102,7 @@ Create a data frame with 4 columns: month, original series, detrended by Regress
 
 ```{r}
 #Data frame - remember to not include January 1973
-
+df_renewable <- data.frame(month=my_date[-1],original=renewable[-1],detrended=detrend_renewable[-1],differenced=diff_renewable)
 
 ```
 
@@ -77,6 +111,22 @@ Using ggplot() create a line plot that shows the three series together. Make sur
 
 ```{r}
 #Use ggplot
+library(ggplot2)
+
+# create sample data
+set.seed(123)
+df_renewable <- data.frame(month = 1:12, original = rnorm(12), 
+                           detrended = rnorm(12), differenced = rnorm(12))
+
+# create ggplot with three lines
+ggplot(data = df_renewable, aes(x = month)) +
+  geom_line(aes(y = original, color = "Original")) +
+  geom_line(aes(y = detrended, color = "Detrended")) +
+  geom_line(aes(y = differenced, color = "Differenced")) +
+  scale_color_manual(name = "Legend", 
+                     values = c("black", "brown", "blue"), 
+                     labels = c("Original", "Detrended", "Differenced")) +
+  ggtitle("Comparison of three series")
 
 ```
 
@@ -86,16 +136,28 @@ Plot the ACF for the three series and compare the plots. Add the argument `ylim=
 
 ```{r}
 #Compare ACFs
+par(mfrow=c(1,3))
+for (i in 1:3) {
+  Acf(ts(df_renewable[,i+1]),lag.max = 40,main=colnames(df_renewable)[i+1],ylim=c(-0.5,1))
+}
 
 ```
-
+Differencing is more efficient in eliminating the trend. The detrended one shows a combination of a general downward trend and a wave-like pattern. The differenced one, on the other hand, shows no trend, only some spikes.
 
 ### Q6
 Compute the Seasonal Mann-Kendall and ADF Test for the original "Total Renewable Energy Production" series. Ask R to print the results. Interpret the results for both test. Whats the conclusion from the Seasonal Mann Kendall test? What's the conclusion for the ADF test? Do they match what you observed in Q2? Recall that having a unit root means the series has a stochastic trend. And when a series has stochastic trend we need to use a different procedure to remove the trend.
 
 ```{r}
+ts_renewable <- ts(renewable,start=my_date[1],frequency=12)
+SeasonalMannKendall(ts_renewable)
+adf.test(ts_renewable)
 
 ```
+
+Seasonal MannKendall:
+The p-value is 2.22e-16, less than 0.05, so we can reject the null hypothesis that "the original time series is stationary."
+ADF:
+The p-value is 0.9056, greater than 0.05. Therefore, we cannot reject the null hypothesis that "the original time series contains a unit root." In other words, the original series has a stochastic trend.
 
 ### Q7
 

@@ -2,6 +2,8 @@
 title: "M4: Outliers and Missing Data"
 author: "Luana Lima"
 output: pdf_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 
@@ -96,7 +98,7 @@ The random component is the time series without seasonal and trend component. Le
 
 Additional info on decompose()
 
-1) You have two options: alternative and multiplicative. Multiplicative models exhibit a change in frequency over time.
+1) You have two options: additive and multiplicative. Multiplicative models exhibit a change in frequency over time.
 
 2) The trend is not a straight line because it uses a moving average method to detect trend. 
 
@@ -105,19 +107,31 @@ Additional info on decompose()
 4) The random component, also referred to as the noise component, is composed of all the leftover signal which is not explained by the combination of the trend and seasonal component. 
 
 ```{r}
-#Ex1: Using R decompose function decompose the wind data in seasonal, trend and random
+decompose_wind_data <- stl(clean_wind_data,s.window="periodic")
+plot(decompose_wind_data)
+```
 
+```{r}
+#Ex1: Using R decompose function decompose the wind data in seasonal, trend and random
+decompose_wind <- decompose(clean_wind_data,type = "additive")
+plot(decompose_wind)
 
 #Ex2: Store the three component in separate vector
-  
+wind_trend <- decompose_wind$trend
+wind_seasonal <- decompose_wind$seasonal
+wind_random <- decompose_wind$random
 
 #Ex3: Create one data frame with all three vector and the Date columns from wind_data
-
+#my answer:
+#df_wind_data <- data.frame(trend=decompose_wind$trend,season=decompose_wind$seasonal,random=decompose_wind$random)  
+df_wind_data <- data.frame("date"=wind_data$DATE,wind_trend,wind_seasonal,wind_random)
 
 #Ex4: Inspect the data frame using head() and tail()
-
+head(decompose_components,12)
+tail(decompose_components,12)
 
 # Discuss the results
+#why there's no NA for the first six in the seasonal: R can use the in-between values to calculate the seasonal means and plug them for the first six rows. (the values are the same for row1 and row13)
 
 ```
 
