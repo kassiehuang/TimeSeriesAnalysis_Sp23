@@ -113,16 +113,11 @@ Using ggplot() create a line plot that shows the three series together. Make sur
 #Use ggplot
 library(ggplot2)
 
-# create sample data
-set.seed(123)
-df_renewable <- data.frame(month = 1:12, original = rnorm(12), 
-                           detrended = rnorm(12), differenced = rnorm(12))
-
 # create ggplot with three lines
 ggplot(data = df_renewable, aes(x = month)) +
-  geom_line(aes(y = original, color = "Original")) +
-  geom_line(aes(y = detrended, color = "Detrended")) +
-  geom_line(aes(y = differenced, color = "Differenced")) +
+  geom_line(aes(y = original, color = "black")) +
+  geom_line(aes(y = detrended, color = "brown")) +
+  geom_line(aes(y = differenced, color = "blue")) +
   scale_color_manual(name = "Legend", 
                      values = c("black", "brown", "blue"), 
                      labels = c("Original", "Detrended", "Differenced")) +
@@ -164,6 +159,9 @@ The p-value is 0.9056, greater than 0.05. Therefore, we cannot reject the null h
 Aggregate the original "Total Renewable Energy Production" series by year. You can use the same procedure we used in class. Store series in a matrix where rows represent months and columns represent years. And then take the columns mean using function colMeans(). Recall the goal is the remove the seasonal variation from the series to check for trend. 
 
 ```{r}
+renewable_data_matrix <- matrix(ts_renewable[1:588],byrow=FALSE,nrow=12)
+#the incomplete 2022 data was removed
+renewable_data_yearly <- colMeans(renewable_data_matrix)
 
 ```
 
@@ -172,6 +170,9 @@ Aggregate the original "Total Renewable Energy Production" series by year. You c
 Apply the Mann Kendal, Spearman correlation rank test and ADF. Are the results from the test in agreement with the test results for the non-aggregated series, i.e., results for Q6?
 
 ```{r}
-
+ts_renewable_yearly <- ts(renewable_data_yearly)
+SeasonalMannKendall(ts_renewable_yearly)
+adf.test(ts_renewable_yearly)
 ```
 
+Yes, the results are in agreement with the non-aggregated series. The p-value of seasonal MannKendall test is still less than 0.05 and p-value of the ADF test is greater than 0.05. The aggregated series can still not be regarded as stationary and we cannot reject the hypothesis that it has a unit root.
