@@ -22,7 +22,6 @@ R packages needed for this assignment: "xlsx" or "readxl", "ggplot2", "forecast"
 
 ```{r}
 #Load/install required package here
-library(xlsx)
 library(forecast)
 library(tseries)
 library(ggplot2)
@@ -69,6 +68,7 @@ sum(is.na(df_data$Wind))
 
 #drop the NA rows
 cleaned_df <- drop_na(df_data)
+#or: cleaned_df <- filter(df_data, !is.na(Solar) & !is.na(Wind))
 
 #inspect the NAs again
 sum(is.na(cleaned_df$Solar))
@@ -89,14 +89,12 @@ cleaned_df$Date <- ymd(cleaned_df$Date)
 #plot the data
 print(ggplot(data = cleaned_df, aes(x=Date))+
         geom_line(aes(y=Solar))+
-        ylab("Trillion Btu")+
-        ggtitle('Solar Energy Consumption')+
+        ylab("Solar Energy Consumption (Trillion Btu)")+
         scale_x_date(date_breaks = "5 years", date_labels = "%Y"))
 
 print(ggplot(data = cleaned_df, aes(x=Date))+
         geom_line(aes(y=Wind))+
-        ylab("Trillion Btu")+
-        ggtitle('Wind Energy Consumption')+
+        ylab("Wind Energy Consumption (Trillion Btu)")+
         scale_x_date(date_breaks = "5 years", date_labels = "%Y"))
 ```
 
@@ -106,13 +104,13 @@ Now plot both series in the same graph, also using ggplot(). Look at lines 141-1
 
 ```{r}
 print(ggplot(data = cleaned_df)+
-        geom_line(aes(x = Date, y = Wind, color = "Wind"),alpha=0.8) +
-        geom_line(aes(x = Date, y = Solar, color = "Solar",alpha=0.8)) +
+        geom_line(aes(x = Date, y = Wind, color = "Wind")) +
+        geom_line(aes(x = Date, y = Solar, color = "Solar")) +
         ylab("Trillion Btu")+
         ggtitle('Energy Consumption')+
         scale_x_date(date_breaks = "5 years", date_labels = "%Y")+
         scale_color_manual(name='Legend',
-                           values=c("Wind"='blue',"Solar"='orange'),
+                           values=c("Wind"='blue',"Solar"='red'),
                            labels=c('Wind','Solar'))+
         theme(legend.position = "bottom")
       )
@@ -124,8 +122,8 @@ print(ggplot(data = cleaned_df)+
 Transform wind and solar series into a time series object and apply the decompose function on them using the additive option, i.e., `decompose(ts_data, type = "additive")`. What can you say about the trend component? What about the random component? Does the random component look random? Or does it appear to still have some seasonality on it?
 
 ```{r}
-ts_solar <- ts(cleaned_df$Solar,frequency = 12,start=my_date[1])
-ts_wind <- ts(cleaned_df$Wind,frequency = 12,start=my_date[1])
+ts_solar <- ts(cleaned_df$Solar,frequency = 12,start=c(1984,1))
+ts_wind <- ts(cleaned_df$Wind,frequency = 12,start=c(1984,1))
 
 decompose_solar_add <- decompose(ts_solar, type = "additive")
 plot(decompose_solar_add)
@@ -134,6 +132,13 @@ decompose_wind_add <- decompose(ts_wind, type = "additive")
 plot(decompose_wind_add)
 
 ```
+
+Trend Component:
+Both the wind and solar series remained stable until 2005, when they began to increase.
+
+Random component:
+The random component of the solar series doesn't look "random", but follows a very regular seasonal wave pattern. The magnitude of the wave slowly decreased from the beginning until ~2015, and then began to increase.
+The random component of the wind series also appears to be seasonal, with the magnitude decreasing slowly until 2010 and increasing rapidly thereafter.
 
 ### Q4
 
@@ -149,11 +154,15 @@ plot(decompose_wind_mul)
 
 ```
 
+For the solar series, its random component still doesn't look "random": it now fluctuates around 1 instead of 0, and the magnitude of the fluctuation decreased dramatically around 1990, remaining fairly stable from then on.
+The wind series shows a similar pattern: its random component fluctuates around 1, and the fluctuation was less pronounced after 2000.
+
 ### Q5
 
 When fitting a model to this data, do you think you need all the historical data? Think about the data from 90s and early 20s. Are there any information from those years we might need to forecast the next six months of Solar and/or Wind consumption. Explain your response.
 
 > Answer:
+No, I don't think we need all the historical data. Because both the technology and society's perception of wind and solar have changed, and that will have a big impact on the market dynamics and therefore on their consumption. If we were only forecasting consumption for the next six months, it would make more sense to only look at the last few years.
 
 ### Q6
 
@@ -172,15 +181,9 @@ plot(new_decompose_solar_add)
 new_decompose_wind_add <- decompose(new_ts_wind, type = "additive")
 plot(new_decompose_wind_add)
 
-#try multiplicative
-new_decompose_solar_mul <- decompose(new_ts_solar, type = "multiplicative")
-plot(new_decompose_solar_mul)
-new_decompose_wind_mul <- decompose(new_ts_wind, type = "multiplicative")
-plot(new_decompose_wind_mul)
-
 ```
 
 > Answer:
-
+For the solar series, the additive model was not a good fit because the random component doesn't look random and its level has a clear changing decreasing-and-then-increasing pattern over time. For the wind series, the random component looks random, but its mean was around 1, which is not a good sign.
 
 
