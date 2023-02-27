@@ -184,6 +184,6 @@ plot(new_decompose_wind_add)
 ```
 
 > Answer:
-For the solar series, the additive model was not a good fit because the random component doesn't look random and its level has a clear changing decreasing-and-then-increasing pattern over time. For the wind series, the random component looks random, but its mean was around 1, which is not a good sign.
+For the solar series, the additive model was not a good fit because the random component doesn't look random and its level has a clear changing decreasing-and-then-increasing pattern over time. For the wind series, the random component looks random.
 
 
