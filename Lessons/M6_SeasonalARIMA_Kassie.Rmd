@@ -118,6 +118,8 @@ Remember from previous scripts that the electricity price series has a stochasti
 #Creating non-seasonal residential price time series
 deseasonal_residential_price <- seasadj(decompose_residential_price)  
 
+#**question: why don't we just use the seasadj() in the first place but to use this after the decompose function first?
+
 # Find out how many time we need to difference
 n_diff <- ndiffs(deseasonal_residential_price)
 cat("Number of differencing needed: ",n_diff)
@@ -159,6 +161,8 @@ residential_price_seas_diff <- diff(ts_electricity_price[,"Residential"],lag=12,
 residential_price_trend_diff <- diff(ts_electricity_price[,"Residential"],lag =1, differences=1) #diff done on orig series
 residential_price_both_diff <- diff(residential_price_trend_diff,lag =12, differences=1)
 
+#** question: I think my question links to my other question before about d&D: can we do in a reversed order to difference the seasonal first and then trend?
+
 #Check autocorrelation plots for differenced series
 #Comparing ACFs
 par(mfrow=c(1,4))
@@ -196,6 +200,8 @@ Now let's look at seasonal lags only (12,24,36,48). ACF has one spike at 12 and 
 
 SARIMA_manual <- Arima(ts_electricity_price[,"Residential"],order=c(1,1,1),seasonal=c(0,1,1),include.drift=FALSE)
 #because we've differenced twice, so we won't be allowing drift
+
+#** question: correct me if I'm wrong: only allowing drift when d=1?
 print(SARIMA_manual)
 
 par(mfrow=c(1,3))
