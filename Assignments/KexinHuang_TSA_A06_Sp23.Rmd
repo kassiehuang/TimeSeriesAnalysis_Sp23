@@ -1,7 +1,7 @@
 ---
 title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2023"
 subtitle: "Assignment 6 - Due date 03/06/23"
-author: "Student Name"
+author: "Kexin Huang"
 output: pdf_document
 geometry: margin=2.54cm
 ---
@@ -72,7 +72,7 @@ Recall that the non-seasonal ARIMA is described by three parameters ARIMA$(p,d,q
 (d) Compare the ACF and PACF values R computed with the theoretical values you provided for the coefficients. Do they match? Explain your answer.
 
 > Answer: 
-
+#is phi=0.6?
 
 (e) Increase number of observations to $n=1000$ and repeat parts (a)-(d).
 
@@ -88,6 +88,8 @@ Consider the ARIMA model $y_t=0.7*y_{t-1}-0.25*y_{t-12}+a_t-0.1*a_{t-1}$
 
 
 (a) Identify the model using the notation ARIMA$(p,d,q)(P,D,Q)_ s$, i.e., identify the integers $p,d,q,P,D,Q,s$ (if possible) from the equation.
+
+because there's no constant, so we can assume the d= something other than 0
 
 (b) Also from the equation what are the values of the parameters, i.e., model coefficients. 
 
