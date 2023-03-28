@@ -1,9 +1,13 @@
 ---
 title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2023"
+author: "Kexin(Kassie) Huang"
 subtitle: "Assignment 8 - Due date 03/27/23"
-author: "Student Name"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 geometry: margin=2.54cm
+editor_options:
+  chunk_output_type: console
 ---
 
 ## Directions
@@ -20,7 +24,11 @@ Some packages needed for this assignment: `forecast`,`tseries`,`smooth`. Do not 
 
 ```{r}
 #Load/install required package here
-
+library(forecast)
+library(tseries)
+library(smooth)
+library(ggplot2)
+library(tidyverse)
 ```
 
 ## Importing and processing the data set
@@ -37,6 +45,25 @@ Read the file into a data frame. Prepare your time series data vector such that 
 
 ```{r}
 
+#read data and prepare the ts
+df_data <- read.table("./Data/inflowtimeseries.txt", header = FALSE)
+df_inflow_all <- data.frame(cbind(paste(df_data$V1,df_data$V2),df_data$V17)) %>%
+  rename( Date = X1, Inflow = X2) %>%
+  mutate( Date = my(Date), Inflow = as.numeric(Inflow))
+df_inflow_09 <- df_inflow_all %>%
+  filter(Date >= as.Date("2000-01-01") & Date <= as.Date("2009-12-31"))
+
+ts_inflow_all <- ts(df_inflow_all$Inflow,start = c(1931,1),frequency = 12)
+
+#extract the observations from 2000-2009
+ts_inflow_09 <- window(ts_inflow_all, start = c(2000, 1), end = c(2009, 12))
+
+#plot the time series, ACF and PACF
+par(mar=c(3,3,3,0));par(mfrow=c(1,3))
+ts.plot(ts_inflow_09,main="Time series plot")
+Acf(ts_inflow_09,lag.max=40,ylim=c(-1,1),main="ACF plot")
+Pacf(ts_inflow_09,lag.max=40,ylim=c(-1,1),main="PACF plot")
+
 ```
 
 ### Q2
@@ -45,7 +72,35 @@ Using the $decompose()$ or $stl()$ and the $seasadj()$ functions create a series
 
 ```{r}
 
+#decompose and deseason
+decompose_inflow_all <- stl(ts_inflow_all, s.window = "periodic")
+deseason_inflow_all <- seasadj(decompose_inflow_all)
+deseason_inflow_09 <- window(deseason_inflow_all, start = c(2000, 1), end = c(2009, 12))
+
+#plot the original and deseasoned series
+combined_09 <- data.frame(Date = df_inflow_09$Date,
+                           Original = df_inflow_09$Inflow,
+                           Deseasonal = deseason_inflow_09)
+
+ggplot(combined_09, aes(x = Date)) +
+  geom_line(aes(y = Original, color = "Original"), size = 1) +
+  geom_line(aes(y = Deseasonal, color = "Deseasonal"), size = 1) +
+  scale_color_manual(values = c("Original" = "black", "Deseasonal" = "blue")) +
+  labs(x = "Date", y = "Inflow",title = "Deseasonal and Original Series", color = "Legend") 
+
+#ACF and PACF plot
+par(mar=c(3,3,3,0));par(mfrow=c(2,3))
+ts.plot(deseason_inflow_09,main="Time series plot (deseasonal)")
+Acf(deseason_inflow_09,lag.max=40,ylim=c(-1,1),main="ACF plot")
+Pacf(deseason_inflow_09,lag.max=40,ylim=c(-1,1),main="PACF plot")
+
+ts.plot(ts_inflow_09,main="Time series plot (original)")
+Acf(ts_inflow_09,lag.max=40,ylim=c(-1,1),main="ACF plot")
+Pacf(ts_inflow_09,lag.max=40,ylim=c(-1,1),main="PACF plot")
 ```
+
+> Answer:
+Compared to the original data, the seasonal pattern is less pronounced, as shown in all three plots: The regular wave pattern in the original time series plot no longer exists in the deseasonal time series plot. Also, the magnitude of the "wave" in the ACF plot decreased after deseasoning. In the PACF plot, the number of spikes exceeding the significance interval decreases.
 
 ## Part II: Forecasting with ARIMA models and its variations
 
@@ -54,8 +109,25 @@ Using the $decompose()$ or $stl()$ and the $seasadj()$ functions create a series
 Fit a non-seasonal ARIMA$(p,d,q)$ model using the auto.arima() function to the non-seasonal data. Forecast 12 months ahead of time using the $forecast()$ function. Plot your forecasting results and further include on the plot the last year of non-seasonal data to compare with forecasted values (similar to the plot on the lesson file for M10).
 
 ```{r}
+#forecast
+par(mfrow=c(1,1))
+deseason_09_arima <- auto.arima(deseason_inflow_09, seasonal = FALSE)
+forecast_deaseason_09_arima <- forecast(deseason_09_arima, h = 12)
+plot(forecast_deaseason_09_arima)
+                             
+#extract the actual non-seasonal data
+deseason_inflow_10 <- window(deseason_inflow_all,start=c(2010,1),end=c(2010,12))
+
+#combine the forecast result with the actual data
+autoplot(window(deseason_inflow_all,start=c(2000,1),end=c(2010,12)),
+         xlab="Year",ylab="Inflow")+
+  autolayer(forecast_deaseason_09_arima,series="Non-seasonal ARIMA",PI=FALSE)+
+  autolayer(deseason_inflow_10, series="Actual non-seasonal data")
 
 ```
+
+> Answer:
+The non-seasonal ARIMA produced a series of constant, over-estimated forecasted values compared with the actual data.
 
 ### Q4
 
@@ -64,6 +136,23 @@ Put the seasonality back on your forecasted values and compare with the original
 
 ```{r}
 
+#generate the seasonal component
+season_only_09 <- window(decompose_inflow_all$time.series[,"seasonal"],start=c(2000,1),end=c(2009,12)) 
+forecast_season_09 <- forecast(season_only_09, h=12)
+plot(forecast_season_09)
+
+#add the seasonal component to previous ARIMA forecast
+forescast_deaseason_09_arima_added <- forecast_deaseason_09_arima$mean + forecast_season_09$mean 
+
+#extract the original data
+original_inflow_10 <- window(ts_inflow_all,start=c(2010,1),end=c(2010,12))
+
+#combine the new series with the original data
+autoplot(window(ts_inflow_all,start=c(2000,1),end=c(2010,12)),
+         xlab="Year",ylab="Inflow")+
+  autolayer(forescast_deaseason_09_arima_added,series="Non-seasonal ARIMA, seasons added")+
+  autolayer(original_inflow_10, series="Actual seasonal data")
+
 ```
 
 ### Q5
@@ -71,12 +160,31 @@ Put the seasonality back on your forecasted values and compare with the original
 Repeat Q3 for the original data, but now fit a seasonal ARIMA$(p,d,q)x(P,D,Q)_ {12}$ also using the auto.arima().
 
 ```{r}
+#forecast
+original_09_arima <- auto.arima(ts_inflow_09)
+forecast_original_09_arima <- forecast(original_09_arima, h = 12)
+plot(forecast_original_09_arima)
 
+#combine the forecast result with the actual non-seasonal data
+autoplot(window(ts_inflow_all,start=c(2000,1),end=c(2010,12)),
+         xlab="Year",ylab="Inflow")+
+  autolayer(forecast_original_09_arima,series="Seasonal ARIMA",PI=FALSE)+
+  autolayer(original_inflow_10, series="Actual seasonal data")
 ```
 
 ### Q6
 
 Compare the plots from Q4 and Q5 using the autoplot() function.
+
+```{r}
+autoplot(window(ts_inflow_all,start=c(2000,1),end=c(2010,12)),
+         xlab="Year",ylab="Inflow")+
+  autolayer(forecast_original_09_arima,series="Seasonal ARIMA",PI=FALSE)+
+  autolayer(forescast_deaseason_09_arima_added,series="Non-seasonal ARIMA, seasons added")+
+  autolayer(original_inflow_10, series="Actual seasonal data")
+```
+
+The SARIMA model performs better forecast than using manually de-seasoning and fitting a non-seasonal ARIMA: the forecast from SARIMA is always closer to the actual seasonal data than the other one.
 
 ## Part III: Forecasting with Other Models
 
