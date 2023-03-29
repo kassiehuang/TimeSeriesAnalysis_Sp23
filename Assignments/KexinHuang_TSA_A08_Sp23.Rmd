@@ -3,6 +3,7 @@ title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2023"
 author: "Kexin(Kassie) Huang"
 subtitle: "Assignment 8 - Due date 03/27/23"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
 geometry: margin=2.54cm
@@ -29,6 +30,8 @@ library(tseries)
 library(smooth)
 library(ggplot2)
 library(tidyverse)
+library(lubridate)
+
 ```
 
 ## Importing and processing the data set
@@ -184,7 +187,7 @@ autoplot(window(ts_inflow_all,start=c(2000,1),end=c(2010,12)),
   autolayer(original_inflow_10, series="Actual seasonal data")
 ```
 
-The SARIMA model performs better forecast than using manually de-seasoning and fitting a non-seasonal ARIMA: the forecast from SARIMA is always closer to the actual seasonal data than the other one.
+The SARIMA model performs better forecast than using manually de-seasoning and fitting a non-seasonal ARIMA: the forecast from SARIMA is always closer to the actual seasonal data than the other.
 
 ## Part III: Forecasting with Other Models
 
@@ -193,6 +196,9 @@ The SARIMA model performs better forecast than using manually de-seasoning and f
 Fit an exponential smooth model to the original time series using the function $ses()$  from package `forecast`. Note that this function automatically do the forecast. Do not forget to set the arguments: silent=FALSE and holdout=FALSE, so that the plot is produced and the forecast is for the year of 2010.
 
 ```{r}
+original_09_es <-  es(ts_inflow_09,silent=FALSE,holdout=FALSE)
+forecast_original_09_es <- forecast(original_09_es,h=12)
+plot(forecast_original_09_es)
 
 ```
 
@@ -205,6 +211,13 @@ Make one plot with the complete original seasonal historical data (Jan 2000 to D
 
 
 ```{r}
+#plot together
+autoplot(window(ts_inflow_all,start=c(2000,1),end=c(2010,12)),
+         xlab="Year",ylab="Inflow")+
+  autolayer(forecast_original_09_arima,series="Seasonal ARIMA",PI=FALSE)+
+  autolayer(forescast_deaseason_09_arima_added,series="Non-seasonal ARIMA, seasons added")+
+  autolayer(forecast_original_09_es,series="Exponential smooth model")+
+  autolayer(original_inflow_10, series="Actual seasonal data")
 
 ```
 
@@ -212,16 +225,21 @@ Make one plot with the complete original seasonal historical data (Jan 2000 to D
 
 From the plot in Q9 which model or model(s) are leading to the better forecasts? Explain your answer. Hint: Think about which models are doing a better job forecasting the high and low inflow months for example.
 
-
-```{r}
-
-```
+SARIMA works the best, as it appears to be the closest to the actual data, especially at the seasonal peak and trough of the forecasted year.
 
 ### Q10
 
 Now compute the following forecast metrics we learned in class: RMSE and MAPE,  for all the models you plotted in part Q9. You can do this by hand since your have forecasted and observed values for the year of 2010. Or you can use R function $accuracy()$ from package "forecast" to do it. Build and a table with the results and highlight the model with the lowest MAPE. Does the lowest MAPE corresponds match your answer for part Q10?
 
 ```{r}
+ARIMA_scores <- accuracy(forescast_deaseason_09_arima_added,x = original_inflow_10)
+SARIMA_scores <- accuracy(forecast_original_09_arima$mean,x = original_inflow_10)
+ES_scores <- accuracy(forecast_original_09_es$mean, x=original_inflow_10)
 
+seas_scores <- as.data.frame(rbind(ARIMA_scores,SARIMA_scores,ES_scores))
+row.names(seas_scores) <- c("ARIMA", "SARIMA","ES")
+
+print(seas_scores)
 ```
 
+Yes. SARIMA seems to have the lowest MAPE, indicating it's the best model.
