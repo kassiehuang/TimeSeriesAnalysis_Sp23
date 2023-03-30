@@ -38,10 +38,13 @@ library(forecast)
 library(Kendall)
 library(tseries)
 library(outliers)
+#install.packages("tidyverse") 
+library(dplyr)
 library(tidyverse)
 library(smooth)
 library(zoo)
 library(kableExtra)
+
 ```
 
 ## Introduction to Complex Seasonality
@@ -59,7 +62,7 @@ The `ts()` function we have been using to create time series objects can only ha
 
 df_frequency_spec <- data.frame(
   Data = c("Annual", "Quartely","Monthly","Weekly"),
-  Frequency = c(1,2,12,52)
+  Frequency = c(1,4,12,52)
 )
 
 kbl(df_frequency_spec, caption="Frequency used with ts() function") %>% 
@@ -124,8 +127,11 @@ The data will need some tidying up. Here we are using the `tidyverse` package an
 temp <- tempfile()
 download.file("https://archive.ics.uci.edu/ml/machine-learning-databases/00235/household_power_consumption.zip",temp)
 household_all <- read.table(unz(temp, "household_power_consumption.txt"),header=TRUE, sep=";")
-unlink(temp)
+unlink(temp) #clean the space
+```
 
+
+```{r message=FALSE, warning=FALSE}
 #Fixing date columns and selecting active power only column
 act_power_all <- household_all %>% 
   mutate( Global_active_power = as.numeric(Global_active_power)) %>%  
@@ -149,7 +155,8 @@ act_power_hourly <- act_power_all %>%
   filter( !is.na(Global_active_power)) %>% 
   group_by(Date,Year,Month,Day,Hour) %>% # here we left column with minutes out
   summarise( hourly_mean_active_power = mean(Global_active_power))
-
+#group_by function is a preparation step for the summarize function here
+  
 ggplot(act_power_hourly, aes(x=Date,y=hourly_mean_active_power)) +
   geom_line() +
   ylab("Average Hourly Household Active Power")
