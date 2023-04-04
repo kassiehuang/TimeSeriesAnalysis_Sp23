@@ -284,6 +284,7 @@ Fourier terms are used to model the seasonal components. It resembles the season
 ARIMA_Four_fit <- auto.arima(ts_act_power_daily_train, 
                              seasonal=FALSE, 
                              lambda=0,
+                             #it's transforming the data to be normal distribution
                              xreg=fourier(ts_act_power_daily_train, 
                                           K=c(2,12))
                              )
@@ -333,7 +334,7 @@ autoplot(ts_act_power_daily) +
 ### Model 4: Neural Network Time Series Forecasts
 
 There is a function in package `forecast` called `nnetar()` that will fit a feed-forward neural networks model to a time series.
-
+#python is a lot more better on doing model with Neural Network
 A feed-forward neural network is fitted with lagged values of the series as inputs. The inputs are for lags 1 to p, and lags s to sP where `s=frequency(y)`. If xreg is provided, its columns are also used as inputs. 
 The network is trained for one-step forecasting. Multi-step forecasts are computed recursively.
 
